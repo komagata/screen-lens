@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+*.log
+*.png
+*.jpg
+*.jpeg
+*.onnx
+*-results/
+experiments/
+.DS_Store

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080">
+  <rect width="1920" height="1080" fill="#171b24"/>
+  <g fill="#f2f4f8" font-family="DejaVu Sans" font-size="32">
+    <text x="90" y="110" font-size="48">Settings</text>
+    <text x="90" y="230">Network connection</text>
+    <text x="90" y="290">Connected</text>
+    <text x="90" y="420">Save changes</text>
+    <text x="470" y="420">Cancel</text>
+    <text x="90" y="650">Permission denied</text>
+    <text x="90" y="710">Please check your configuration.</text>
+  </g>
+</svg>
