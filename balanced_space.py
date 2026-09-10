@@ -12,7 +12,8 @@ def budgets(image,base,obstacles=()):
         if min(x,y)<0 or min(w,h)<=0 or x+w>image.width or y+h>image.height:
             raise ValueError('Invalid display geometry')
         bg=np.median(pixels[y:y+h,x:x+w].reshape(-1,3),axis=0)
-        lower=max(1,y-16);upper=min(image.height-1,y+h+16)
+        extra=max(48,min(256,3*row['maximum_font_size'])) if 'maximum_font_size' in row else 16
+        lower=max(1,y-extra);upper=min(image.height-1,y+h+extra)
         for other in list(base[:index])+list(base[index+1:])+list(obstacles):
             if min(x+w,other['x']+other['width'])<=max(x,other['x']):continue
             end=int(other['y']+other['height']);start=int(other['y'])
@@ -52,7 +53,7 @@ def fit_translations(base,budget,translations,minimum=12,maximum=16):
         if translations[row['id']]==row.get('text'):continue
         owners.append(index)
         requests.append(dict(text=translations[row['id']],width=int(row['width']),height=int(limit['height']),
-            minimum_font_size=minimum,maximum_font_size=maximum,measure_only=True))
+            minimum_font_size=row.get('minimum_font_size',minimum),maximum_font_size=row.get('maximum_font_size',maximum),measure_only=True))
     # Bound each subprocess payload, but share batches across row boundaries.
     for offset in range(0,len(requests),32):
         batch=requests[offset:offset+32]

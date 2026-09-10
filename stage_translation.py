@@ -39,6 +39,8 @@ def payload(case,mode):
         result['service_tier']=case['service_tier']
     result['instructions']=(
         'Translate the exact supplied target text into natural Japanese. '
+        'Translate ordinary English UI labels, headings and sentence fragments too; do not leave them in English. '
+        'Leave source text unchanged only when it needs no translation, such as a proper name, code identifier or URL. '
         'Use reference text or images, when supplied, only to disambiguate meaning. '
         'Parent reference text provides the original unsplit context; translate only the target fragment, not its parent. '
         'Never replace the supplied source by rereading it from the image. '

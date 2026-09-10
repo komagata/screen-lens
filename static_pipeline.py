@@ -128,6 +128,7 @@ def main(argv=None):
     parser.add_argument('--separate-display-lines',action='store_true',help='Local background trimming and exact rereading of overlapping display groups; OCR source stays unchanged')
     parser.add_argument('--balanced-display-space',action='store_true',help='Share vertical gaps and fit with minimum movement; requires --expand-display-space --renderer pango')
     parser.add_argument('--concise-translation',action='store_true',help='Fidelity-first concise translation with approximate layout hints; requires --balanced-display-space')
+    parser.add_argument('--match-source-font-size',action='store_true',help='Size Japanese text from original OCR line heights')
     parser.add_argument('--minimum-font-size',type=int,choices=range(7,25))
     parser.add_argument('--maximum-font-size',type=int,choices=range(7,25))
     parser.add_argument('--ocr-profile',choices=['v5','v5-v6','v6'],default=DEFAULT_UI_PROFILE)
@@ -309,6 +310,10 @@ def main(argv=None):
             display_groups,display_line_audit=normalize(image,case['groups'],reread_display)
         display_line_seconds=time.monotonic()-line_started
         (args.output/'display-lines.json').write_text(json.dumps(display_line_audit,ensure_ascii=False,indent=2))
+    if args.match_source_font_size:
+        from source_font import match_source_fonts
+        with Image.open(args.image) as source_image:
+            display_groups=match_source_fonts(display_groups,rows,source_image)
     display_budgets=[]
     if args.expand_display_space:
         from display_space import allocate
@@ -325,7 +330,10 @@ def main(argv=None):
     if args.concise_translation:
         import math
         font=args.minimum_font_size
-        layout_hints={r['id']:max(1,int(r['width']//font))*max(1,1+int((r['height']-math.ceil(font*7/6))//math.ceil(font*1.5))) for r in display_groups}
+        layout_hints={}
+        for r in display_groups:
+            size=r.get('maximum_font_size',font)
+            layout_hints[r['id']]=max(1,int(r['width']//size))*max(1,1+int((r['height']-math.ceil(size*7/6))//math.ceil(size*1.5)))
         case=dict(case,concise=True,layout_hints=layout_hints)
     report=dict(source=case['image'],mode=args.mode,renderer=args.renderer,per_target=args.per_target,translation_batches=args.translation_batches,ocr_profile=args.ocr_profile,word_regions=args.word_regions,ocr=rows,groups=case['groups'],
                 recover_display_regions=args.recover_display_regions,

@@ -32,7 +32,7 @@ class SnapshotCacheTests(unittest.TestCase):
             image.save(session / 'screen.png')
             self.assertFalse(run(True)['cache_hit'])
             self.assertEqual(len(calls), 3)
-            archive = root / 'screen-lens-snapshot-cache' / 'last.zip'
+            archive = root / 'screen-lens-snapshot-cache' / (snapshot_cache.fingerprint(session / 'screen.png',True) + '.zip')
             self.assertEqual(archive.stat().st_mode & 0o777, 0o600)
             self.assertEqual(archive.parent.stat().st_mode & 0o777, 0o700)
             stale = time.time() - snapshot_cache.MAX_AGE - 1
@@ -54,3 +54,44 @@ class SnapshotCacheTests(unittest.TestCase):
             for _ in range(2):
                 self.assertFalse(snapshot_cache.prepare(root, False, compute, runtime=root)['cache_hit'])
             self.assertEqual(len(calls), 2)
+
+    def test_returning_to_previous_screen_skips_translation(self):
+        import snapshot_cache
+        import json
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            calls=[]
+            def compute(directory,fast=False):
+                calls.append(1)
+                Image.open(directory/'screen.png').save(directory/'translated.png')
+                return dict(translatedScreen=True,status='Translated')
+            def run(color):
+                Image.new('RGB',(32,24),color).save(root/'screen.png')
+                return snapshot_cache.prepare(root,True,compute,runtime=root)
+            self.assertFalse(run('white')['cache_hit'])
+            self.assertFalse(run('black')['cache_hit'])
+            result=run('white')
+            self.assertTrue(result['cache_hit'])
+            self.assertIn('キャッシュ',result['status'])
+            self.assertEqual(len(calls),2)
+            summary=json.loads((root/'screen-lens-snapshot-cache/last-access.json').read_text())
+            self.assertEqual(summary['reason'],'exact match')
+
+    def test_capacity_and_corrupt_entry_recovery(self):
+        import snapshot_cache
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            def compute(directory,fast=False):
+                Image.open(directory/'screen.png').save(directory/'translated.png')
+                return dict(translatedScreen=True,status='Translated')
+            def run():
+                return snapshot_cache.prepare(root,True,compute,runtime=root)
+            for n in range(snapshot_cache.MAX_ENTRIES+2):
+                Image.new('RGB',(8,8),(n,0,0)).save(root/'screen.png')
+                self.assertFalse(run()['cache_hit'])
+            folder=root/'screen-lens-snapshot-cache'
+            self.assertEqual(len(list(folder.glob('*.zip'))),snapshot_cache.MAX_ENTRIES)
+            cache=folder/(snapshot_cache.fingerprint(root/'screen.png',True)+'.zip')
+            cache.write_bytes(b'broken')
+            self.assertEqual(run()['cache_reason'],'corrupt entry')
+            self.assertTrue(run()['cache_hit'])

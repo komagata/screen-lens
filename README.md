@@ -129,15 +129,19 @@ Runtime screenshots and results live in a private temporary directory under
 files until cleanup/logout. Do not publish those directories. Manual use of
 `static_pipeline.py --output ...` retains outputs at your chosen location.
 
-One successful LT translation is also cached at
-`$XDG_RUNTIME_DIR/screen-lens-snapshot-cache/last.zip` (directory 0700, file 0600).
-This contains the translated screenshot, which can still contain private content.
-It survives closing the overlay, but is not intended to survive logout. Only
-exact full-resolution pixel matches with matching fast-mode and source-code
-fingerprints reuse it; OCR and API requests are skipped on a hit. Entries older
-than 15 minutes are discarded on the next cache access, not by a background timer.
-Failed translations are not cached. Small changes such as a clock can cause a miss.
-Capturing, comparing and displaying still take time; a hit is not instantaneous.
+Up to eight successful LT translations are cached in
+`$XDG_RUNTIME_DIR/screen-lens-snapshot-cache/` (directory 0700, archives 0600).
+These archives contain translated screenshots and can contain private content.
+Entries expire after 15 minutes and are removed on the next cache access; the
+cache is not intended to survive logout. Returning to a previously translated
+screen can reuse its result even after translating another screen.
+Only exact full-resolution pixel matches with matching fast-mode and runtime
+source-code fingerprints reuse a result. Tests and documentation do not affect
+the fingerprint. OCR and API requests are skipped on a hit. Small changes such
+as a clock still cause a miss. Capturing and displaying still take time.
+Failed translations are not cached; corrupt matching entries are regenerated.
+The overlay status says `キャッシュから表示` on a hit. `last-access.json` in that
+folder records only the last hit/miss, reason and time, without screen content.
 
 This repository contains source and synthetic fixtures only—no real desktop
 screenshots, API credentials, model weights, virtual environments, or personal logs.
@@ -201,3 +205,19 @@ See `assets/LICENSE-lucide.txt`; its stroke color is adapted for a dark backgrou
 
 Bug reports are welcome. Include versions, resolution, scaling, timings and a
 synthetic reproduction. Please do not attach private screen captures or keys.
+
+### Local source-size matching
+
+The LT launcher now uses `--match-source-font-size`: Japanese text is sized
+from the median visible glyph height measured in the original OCR lines in each
+region, before display space expansion. Uniform light and dark backgrounds are
+supported; uncertain backgrounds fall back to OCR line height. Small labels and
+large headings therefore receive different font sizes even with padded OCR boxes. This replaces the fixed 18px ceiling in LT mode. The renderer
+uses compact Japanese line spacing and prefers the largest fitting size in the
+available space. Source-sized regions can use up to 640px of blank space on the
+right and up to three font heights vertically (capped at 256px), bounded by
+background changes and neighboring OCR regions. It can shrink by about 25% only when necessary; if the translation still cannot fit inside the safe
+available space, it leaves the original region visible. OCR line height is an
+estimate of visible text size, not the application's exact font metric.
+
+Run the local regression coverage with `.venv/bin/python -m unittest test_source_font`.

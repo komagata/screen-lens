@@ -20,9 +20,9 @@ def render_patch(text,width,height,foreground=(15,20,25),minimum_font_size=None,
         raise ValueError('Invalid size')
     if len(foreground)!=3 or any(type(n) is not int or not 0<=n<=255 for n in foreground):
         raise ValueError('Invalid foreground')
-    if minimum_font_size is not None and (type(minimum_font_size) is not int or not 7<=minimum_font_size<=24):
+    if minimum_font_size is not None and (type(minimum_font_size) is not int or not 7<=minimum_font_size<=128):
         raise ValueError('Invalid minimum font size')
-    if maximum_font_size is not None and (type(maximum_font_size) is not int or not 7<=maximum_font_size<=24):
+    if maximum_font_size is not None and (type(maximum_font_size) is not int or not 7<=maximum_font_size<=128):
         raise ValueError('Invalid maximum font size')
     if minimum_font_size is not None and maximum_font_size is not None and minimum_font_size>maximum_font_size:
         raise ValueError('Reversed font size range')
@@ -37,10 +37,14 @@ def render_patch(text,width,height,foreground=(15,20,25),minimum_font_size=None,
     layout.set_wrap(Pango.WrapMode.WORD_CHAR)
     font=Pango.FontDescription('Noto Sans CJK JP')
     minimum=round((minimum_font_size if minimum_font_size is not None else (7 if height/pixel_scale<=16 else 12))*pixel_scale)
-    minimum_height=None
     for size in range(min(round((maximum_font_size if maximum_font_size is not None else 24)*pixel_scale),height),minimum-1,-1):
         font.set_absolute_size(size*Pango.SCALE)
         layout.set_font_description(font)
+        # Noto CJK's default logical line height is much taller than its ink.
+        # Compact leading keeps wrapped Japanese near the source UI's spacing.
+        attributes=Pango.AttrList()
+        attributes.insert(Pango.attr_line_height_new_absolute(round(size*1.15*Pango.SCALE)))
+        layout.set_attributes(attributes)
         unknown=layout.get_unknown_glyphs_count()
         if unknown:return dict(shown=False,reason='missing glyph',unknown_glyphs=unknown)
         ink,logical=layout.get_pixel_extents()
@@ -49,8 +53,7 @@ def render_patch(text,width,height,foreground=(15,20,25),minimum_font_size=None,
             continue
         if measure_only:
             needed=max(size,ink.height)
-            minimum_height=needed if minimum_height is None else min(minimum_height,needed)
-            continue
+            return dict(shown=True,minimum_height=needed,font_size=size)
         context.set_source_rgb(*(v/255 for v in foreground))
         context.move_to(dx,-ink.y)
         PangoCairo.show_layout(context,layout)
@@ -58,8 +61,6 @@ def render_patch(text,width,height,foreground=(15,20,25),minimum_font_size=None,
         return dict(shown=True,font_size=size,unknown_glyphs=0,
                     ink=[ink.x+dx,0,ink.width,ink.height],
                     png=base64.b64encode(data.getvalue()).decode())
-    if measure_only and minimum_height is not None:
-        return dict(shown=True,minimum_height=minimum_height)
     return dict(shown=False,reason='does not fit')
 
 

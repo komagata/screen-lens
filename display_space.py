@@ -25,7 +25,7 @@ def allocate(image, groups, obstacles=()):
         x,y,right,bottom=original[index]
         pixels=area[y:bottom,x:right]
         bg=np.median(pixels.reshape(-1,3),axis=0)
-        box=extend(image,original[index],bg,tolerance=0,_pixels=area)
+        box=extend(image,original[index],bg,max_extra=640 if 'maximum_font_size' in row else 160,tolerance=0,_pixels=area)
         others=[r for key,r in reserved.items() if key!=index]
         for l,t,r,b in others:
             if l>=right and min(bottom,b)>max(y,t):

@@ -66,17 +66,19 @@ def render(image,rows,translations,renderer='pil',minimum_font_size=None,maximum
         if dominant_count>w*h/2 and dominant!=bg:
             entry.update(reason='background mismatch',interior_background=list(dominant),background=list(bg))
             continue
+        row_minimum=row.get('minimum_font_size',minimum_font_size)
+        row_maximum=row.get('maximum_font_size',maximum_font_size)
         if renderer=='pango':
             request=dict(text=value,width=w,height=h,
                          pixel_scale=pixel_scale,
                          foreground=[15,20,25] if sum(bg)>384 else [231,233,234])
-            if minimum_font_size is not None:request['minimum_font_size']=minimum_font_size
-            if maximum_font_size is not None:request['maximum_font_size']=maximum_font_size
+            if row_minimum is not None:request['minimum_font_size']=row_minimum
+            if row_maximum is not None:request['maximum_font_size']=row_maximum
             pending.append((entry,x,y,w,h,bg,request))
             continue
         fitted=None
-        minimum_size=round((minimum_font_size if minimum_font_size is not None else (7 if h/pixel_scale<=16 else 12))*pixel_scale)
-        for size in range(min(round((maximum_font_size if maximum_font_size is not None else 24)*pixel_scale),h),minimum_size-1,-1):
+        minimum_size=round((row_minimum if row_minimum is not None else (7 if h/pixel_scale<=16 else 12))*pixel_scale)
+        for size in range(min(round((row_maximum if row_maximum is not None else 24)*pixel_scale),h),minimum_size-1,-1):
             font=ImageFont.truetype(FONT,size)
             lines=['']
             for char in value:

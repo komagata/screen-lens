@@ -211,7 +211,7 @@ def prepare_lt(directory, fast=False):
         arguments = [str(source), '--output', str(output),
                     '--cloud', '--mode', 'combined', '--renderer', 'pango',
                     '--expand-display-space', '--minimum-font-size', '12',
-                    '--maximum-font-size', '18']
+                    '--maximum-font-size', '18', '--match-source-font-size']
         if fast:
             arguments += ['--translation-batches', '2', '--concise-translation',
                           '--balanced-display-space', '--ocr-threads',
@@ -227,6 +227,14 @@ def prepare_lt(directory, fast=False):
     # Result and state belong to this unique runtime directory only.
     (output / 'translated.png').replace(directory / 'translated.png')
     shown = sum(row['shown'] for row in report['rendered'])
+    from collections import Counter
+    summary = dict(targets=len(report['groups']), shown=shown,
+                   unchanged=len(report['groups'])-len(report['rendered']),
+                   skipped=dict(Counter(row.get('reason','unknown') for row in report['rendered'] if not row['shown'])))
+    # Counts only: enough to diagnose coverage after private screenshots expire.
+    diagnostic = Path(os.environ['XDG_RUNTIME_DIR']) / 'screen-lens-last-summary.json'
+    with open(diagnostic, 'w', opener=lambda path,flags: os.open(path,flags,0o600)) as stream:
+        json.dump(summary, stream)
     return dict(translatedScreen=True, lines=[], pipeline_seconds=report['total_seconds'],
                 status=f'AI-translated snapshot · GPT-5.6 Luna · Regions: {shown}')
 
