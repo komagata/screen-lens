@@ -90,7 +90,8 @@ Never put an API key in a Git repository, shortcut command, or bug report.
 | Run `lens.py --lt --lt-fast` | Capture once and translate |
 | Run the same command again | Close the current snapshot |
 | Esc | Close |
-| Space / comparison button | Compare the captured original and translation |
+| Space | Compare the captured original and translation |
+| Round translation icon | Close / cancel; rotates while processing, red background on failure |
 | Click, mouse wheel, navigation or typing key | Dismiss; the first action is consumed, not replayed into the underlying app |
 | Window/workspace change notification | Request dismissal |
 
@@ -127,6 +128,16 @@ Runtime screenshots and results live in a private temporary directory under
 `XDG_RUNTIME_DIR` and are removed on normal exit. Abrupt termination may leave
 files until cleanup/logout. Do not publish those directories. Manual use of
 `static_pipeline.py --output ...` retains outputs at your chosen location.
+
+One successful LT translation is also cached at
+`$XDG_RUNTIME_DIR/screen-lens-snapshot-cache/last.zip` (directory 0700, file 0600).
+This contains the translated screenshot, which can still contain private content.
+It survives closing the overlay, but is not intended to survive logout. Only
+exact full-resolution pixel matches with matching fast-mode and source-code
+fingerprints reuse it; OCR and API requests are skipped on a hit. Entries older
+than 15 minutes are discarded on the next cache access, not by a background timer.
+Failed translations are not cached. Small changes such as a clock can cause a miss.
+Capturing, comparing and displaying still take time; a hit is not instantaneous.
 
 This repository contains source and synthetic fixtures only—no real desktop
 screenshots, API credentials, model weights, virtual environments, or personal logs.
@@ -170,7 +181,7 @@ without posting private screenshot data.
 ## Development and tests
 
 ```bash
-.venv/bin/python -m unittest test_lens test_lt_input
+.venv/bin/python -m unittest test_lens test_lt_input test_packaged_layout test_snapshot_cache
 QT_QPA_PLATFORM=offscreen /usr/lib/qt6/bin/qmltestrunner -input qml-tests
 ```
 
@@ -184,6 +195,9 @@ development machine. This is not a fresh-OS or projector test.
 Architecture: `lens.py` captures and coordinates; `static_pipeline.py` performs
 OCR, context-aware translation and layout; `snapshot.py` / `pango_patch.py` render
 Japanese; `shell.qml` displays the snapshot with Quickshell.
+
+The translation icon is Lucide's `languages`, distributed under the ISC license.
+See `assets/LICENSE-lucide.txt`; its stroke color is adapted for a dark background.
 
 Bug reports are welcome. Include versions, resolution, scaling, timings and a
 synthetic reproduction. Please do not attach private screen captures or keys.

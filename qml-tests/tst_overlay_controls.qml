@@ -19,28 +19,33 @@ Item {
             originalSpy.target = controls;
             closeSpy.clear(); originalSpy.clear();
         }
-        function test_close_and_original() {
+        function test_single_button_closes() {
             controls.busy = false;
-            mouseClick(findChild(controls, "originalButton"));
-            compare(originalSpy.count, 1);
-            mouseClick(findChild(controls, "closeButton"));
+            verify(findChild(controls, "originalButton") === null);
+            mouseClick(findChild(controls, "translationButton"));
             compare(closeSpy.count, 1);
         }
-        function test_busy_prevents_original_toggle() {
+        function test_busy_can_cancel() {
             controls.busy = true;
-            verify(!findChild(controls, "originalButton").enabled);
-            verify(findChild(controls, "closeButton").enabled);
+            mouseClick(findChild(controls, "translationButton"));
+            compare(closeSpy.count, 1);
         }
         function test_compact_and_accessible() {
-            verify(controls.width <= 160);
-            compare(findChild(controls, "closeButton").Accessible.name, "Close translation (Esc)");
-            compare(findChild(controls, "originalButton").Accessible.name, "Show original (Space)");
+            compare(controls.width, controls.height);
+            verify(controls.width <= 48);
+            verify(findChild(controls, "translationButton").Accessible.name.includes("Cancel"));
         }
-        function test_busy_indicator_contrasts_with_dark_panel() {
-            const indicator = findChild(controls, "busyIndicator");
-            verify(indicator !== null);
-            compare(indicator.palette.dark.toString(), "#f1f5f9");
-            compare(indicator.palette.text.toString(), "#f1f5f9");
+        function test_icon_rotates_only_while_busy() {
+            const icon = findChild(controls, "translationIcon");
+            const spin = findChild(controls, "translationRotation");
+            verify(icon !== null && spin !== null);
+            tryCompare(icon, "status", Image.Ready);
+            compare(spin.running, true);
+            controls.busy = false;
+            compare(spin.running, false);
+            compare(icon.rotation, 0);
+            controls.failed = true;
+            compare(spin.running, false);
         }
     }
 }

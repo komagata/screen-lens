@@ -236,7 +236,8 @@ def prepare(directory, demo, endpoint, model, provider, ocr='tesseract', vision=
     state = json.loads((directory / 'state.json').read_text())
     if lt:
         try:
-            state.update(prepare_lt(directory, fast=True) if lt_fast else prepare_lt(directory))
+            from snapshot_cache import prepare as cached_prepare
+            state.update(cached_prepare(directory, lt_fast, prepare_lt))
         except Exception as error:
             state.update(translatedScreen=False, lines=[],
                          status=f'Translation failed ({type(error).__name__})')

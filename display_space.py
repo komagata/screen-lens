@@ -1,8 +1,8 @@
 """Opt-in static display allocation; OCR and translation coordinates stay intact."""
 import math
 import numpy as np
-from experiments.ppocr6.right_space import extend, extend_down
-from experiments.ppocr6.space_reservations import reserve
+from right_space import extend, extend_down
+from space_reservations import reserve
 
 
 def allocate(image, groups, obstacles=()):
