@@ -7,7 +7,7 @@ import tempfile
 import time
 import unittest
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent
 
 
 @unittest.skipUnless(Path('/usr/share/omarchy/shell/Ui/TextField.qml').exists(), 'Requires Omarchy shared controls')
@@ -35,13 +35,14 @@ class CredentialQmlTests(unittest.TestCase):
             base = Path(temp)
             tests = base / 'tests'
             tests.mkdir()
+            (tests / 'src').mkdir()
             shutil.copy2(ROOT / 'CredentialForm.qml', tests)
             shutil.copy2(ROOT / 'CredentialPanel.qml', tests)
             if (ROOT / 'panel').exists():
                 shutil.copytree(ROOT / 'panel', tests / 'panel')
                 shutil.copytree(ROOT / 'assets', tests / 'assets')
-                shutil.copy2(ROOT / 'qml-credential-tests/fake_launch.py', tests / 'plugin_launch.py')
-            shutil.copy2(ROOT / 'qml-credential-tests/fake_store.py', tests / 'credential_store.py')
+                shutil.copy2(ROOT / 'qml-credential-tests/fake_launch.py', tests / 'src/plugin_launch.py')
+            shutil.copy2(ROOT / 'qml-credential-tests/fake_store.py', tests / 'src/credential_store.py')
             shutil.copy2(ROOT / 'qml-credential-tests' / source, tests)
             for name in ('Ui', 'Commons'):
                 (tests / name).symlink_to('/usr/share/omarchy/shell/' + name, target_is_directory=True)

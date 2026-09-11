@@ -136,8 +136,8 @@ latency remain unverified.
 
 ## Reproduction and artifacts
 
-`benchmark_visual_context.py` verifies all three model SHA-256 hashes, then runs
-the CPU baseline. `benchmark_visual_followup.py` uses those verified files for
+`tools/benchmark_visual_context.py` verifies all three model SHA-256 hashes, then runs
+the CPU baseline. `tools/benchmark_visual_followup.py` uses those verified files for
 the official-template retry, optional GPU fixture comparison and a saved real
 Wikipedia/terminal screenshot with three OCR text groups batched in one request.
 Pass explicit absolute input paths and a new `--output` directory; both scripts

@@ -13,7 +13,7 @@ import time
 from ocr_backends import DEFAULT_UI_PROFILE
 
 ROOT = Path(__file__).parent
-UI = ROOT / 'live-ui'
+UI = ROOT.parent / 'live-ui'
 
 
 class RegionStability:

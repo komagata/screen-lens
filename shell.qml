@@ -22,7 +22,7 @@ ShellRoot {
     }
     Process {
         id: worker
-        command: [Quickshell.env("SCREEN_LENS_PYTHON"), Qt.resolvedUrl("lens.py").toString().replace("file://", ""),
+        command: [Quickshell.env("SCREEN_LENS_PYTHON"), Qt.resolvedUrl("src/lens.py").toString().replace("file://", ""),
                   "--prepare", root.directory, "--endpoint", Quickshell.env("SCREEN_LENS_ENDPOINT"),
                   "--model", Quickshell.env("SCREEN_LENS_MODEL"), "--provider", Quickshell.env("SCREEN_LENS_PROVIDER"),
                   "--ocr", Quickshell.env("SCREEN_LENS_OCR") || "rapidocr"]

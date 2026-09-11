@@ -45,7 +45,7 @@ sudo pacman -S --needed python-opencv
 ```
 
 These commands do not build the application bundle. Packaging uses
-`runtime_bundle.py SOURCE TARGET --shared base|numpy|extra` against the prepared
+`python -m tools.runtime_bundle SOURCE TARGET --shared base|numpy|extra` against the prepared
 compact runtime and a matching `runtime-manifest.json`. Start a complete bundle
 with `./screen-lens --lt --lt-fast`, not the old Python 3.12 venv. System site
 packages must be enabled (do not launch with `python -S`). No source screenshots

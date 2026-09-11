@@ -8,7 +8,7 @@ from pathlib import Path
 import subprocess
 import urllib.request
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_UI_PROFILE = 'v5-v6'
 
 

@@ -22,7 +22,7 @@ The [headless package](https://pypi.org/project/opencv-python-headless/) omits G
 dependencies; Screen Lens displays through Quickshell, not OpenCV windows.
 RapidOCR 3.9.2, ONNX Runtime 1.29.0 CPU, and the existing OCR models are unchanged.
 Installation deliberately uses `--no-deps` because RapidOCR declares the full
-OpenCV package by name. Run `check_slim_runtime.py` after installation; do not
+OpenCV package by name. Run `tools/check_slim_runtime.py` after installation; do not
 mix the two providers. This exception must be maintained when dependencies change.
 
 ## Local verification
@@ -48,8 +48,8 @@ in this comparison. Synthetic rendering uses fixed Japanese text, not an LLM.
 Reproduce locally (output directory must not exist):
 
 ```bash
-.venv/bin/python check_slim_runtime.py
-.venv/bin/python benchmark_runtime_size.py --output .size-check/my-run
+.venv/bin/python -m tools.check_slim_runtime
+.venv/bin/python -m tools.benchmark_runtime_size --output .size-check/my-run
 du -sk .venv
 ```
 
@@ -136,7 +136,7 @@ before accepting the accuracy loss of a different OCR engine.
 
 ## Runtime-only packaging experiment
 
-`runtime_bundle.py` copies dependencies into a new destination, preserving the
+`tools/runtime_bundle.py` copies dependencies into a new destination, preserving the
 source and licenses while omitting dependency `tests`/`__pycache__` directories,
 the unused v6 detector, and the unused standalone ONNX Runtime C library. It
 keeps NumPy's `testing` module and RapidOCR's classifier model because imports
@@ -243,7 +243,7 @@ reduced-operator ONNX build. Repeat with that build before adopting it.
 ## Removing the general-purpose geometry runtime
 
 RapidOCR 3.9.2 uses Shapely only to obtain the area and perimeter of the
-four-corner box passed to `unclip`. `polygon_measure.py` implements just these
+four-corner box passed to `unclip`. `src/polygon_measure.py` implements just these
 two measurements with ordinary double-precision arithmetic, not a general
 Shapely substitute. Five unit tests cover direction, translation, rotation,
 degeneracy, invalid inputs and reference rounding. Sequential addition is
@@ -251,7 +251,7 @@ intentional: Python's compensated `sum` changes the last bits of the perimeter.
 10,000 deterministic random OpenCV boxes matched GEOS area/perimeter exactly.
 
 The candidate `.size-check/runtime-no-geos` applies
-`packaging/rapidocr-box-measures.patch` and copies `polygon_measure.py` into
+`packaging/rapidocr-box-measures.patch` and copies `src/polygon_measure.py` into
 `rapidocr/ch_ppocr_det/`. The original utils.py SHA-256 is
 `01d25a0b1bbdcdd4aba70a23ae96714c5408df93b295c43ca194952e279adb9e`.
 It omits Shapely and its GEOS libraries, preserving originals outside the
@@ -299,7 +299,7 @@ extensions are stripped. With stock ONNX Runtime it measured 109,464 KiB.
 No private Python interpreter is needed: the installed Omarchy base includes
 `python-gobject` and `nautilus-python`.
 
-`runtime_bundle.py` now also omits ONNX model-development directories
+`tools/runtime_bundle.py` now also omits ONNX model-development directories
 `transformers`, `quantization`, and `tools`, retaining inference code and
 licenses. This exclusion was tested red/green. The resulting
 `.size-check/runtime314-pruned` is 101,412 KiB (103.85 MB). All 40 Python tests

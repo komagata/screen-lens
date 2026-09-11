@@ -30,7 +30,7 @@ def server(config, logfile, gpu_layers='auto', margin=1024):
         argv = command(config, sock, gpu_layers, margin)
         env = {k: v for k, v in os.environ.items() if k not in ('OPENAI_API_KEY', 'OPENAI_API_TOKEN')}
         with open(logfile, 'w') as log:
-            process = subprocess.Popen([sys.executable, '-B', str(Path(__file__).with_name('local_translation.py')),
+            process = subprocess.Popen([sys.executable, '-B', str(Path(__file__).resolve().parents[1] / 'src/local_translation.py'),
                                         '--serve', str(os.getpid()), *argv], env=env, stdout=log, stderr=log)
             try:
                 started = time.monotonic()

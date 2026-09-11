@@ -7,6 +7,7 @@ __pycache__/
 .env.*
 *.log
 *.png
+!docs/media/*.png
 *.jpg
 *.jpeg
 *.onnx

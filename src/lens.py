@@ -14,7 +14,7 @@ import tempfile
 import time
 import urllib.request
 from urllib.parse import urlparse
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent
 from runtime_loader import activate
 BUNDLED_RUNTIME = activate(ROOT)
 from ocr_backends import DEFAULT_UI_PROFILE
@@ -482,7 +482,7 @@ def main():
             if not runtime.exists():
                 parser.error('Install OCR dependencies in .venv, or use --ocr tesseract')
             # Replace the process so closing the overlay also terminates OCR work.
-            os.execv(str(runtime), [str(runtime), str(ROOT / 'lens.py'), *sys.argv[1:]])
+            os.execv(str(runtime), [str(runtime), str(ROOT / 'src/lens.py'), *sys.argv[1:]])
     check_endpoint(args.endpoint)
     if args.live:
         from live import toggle as toggle_live

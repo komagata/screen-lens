@@ -1,2 +1,2 @@
 #!/bin/sh
-exec /usr/bin/python -B /usr/lib/screen-lens/package_entry.py "$@"
+exec /usr/bin/python -B /usr/lib/screen-lens/src/package_entry.py "$@"

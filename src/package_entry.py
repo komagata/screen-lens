@@ -18,7 +18,7 @@ def link_panel(panel, target):
 
 
 def main():
-    root = Path(__file__).resolve().parent
+    root = Path(__file__).resolve().parent.parent
     args = sys.argv[1:]
     if args == ['--setup-panel']:
         target = Path.home() / '.config/omarchy/plugins' / PLUGIN_ID
@@ -31,7 +31,7 @@ def main():
                 target.unlink()
             raise
         return
-    os.execv('/usr/bin/python', ['/usr/bin/python', '-B', str(root / 'lens.py'),
+    os.execv('/usr/bin/python', ['/usr/bin/python', '-B', str(root / 'src/lens.py'),
                                *(args or ['--lt', '--lt-fast'])])
 
 

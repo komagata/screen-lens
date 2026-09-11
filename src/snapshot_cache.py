@@ -10,7 +10,7 @@ import time
 import zipfile
 from PIL import Image
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent
 MAX_AGE = 15 * 60
 MAX_ENTRIES = 8
 
@@ -26,7 +26,7 @@ def fingerprints(source, fast):
     if provider == 'local':
         from local_translation import configuration
         settings.update(json.dumps(configuration(), sort_keys=True).encode())
-    sources = sorted(p for p in ROOT.glob('*.py') if not p.name.startswith('test_'))
+    sources = sorted(p for p in (ROOT / 'src').glob('*.py') if not p.name.startswith('test_'))
     sources += sorted(ROOT.glob('requirements*.txt'))
     sources += list(ROOT.glob('runtime-manifest.json'))
     for path in sources:

@@ -49,7 +49,7 @@ class LensTests(unittest.TestCase):
         self.assertEqual(core.demo_translate([{'id': '0', 'text': 'Unseen sentence'}]), {})
 
     def test_overlay_has_safe_text_and_exit_controls(self):
-        path = Path(__file__).with_name('shell.qml')
+        path = Path(__file__).resolve().parents[1] / 'shell.qml'
         self.assertTrue(path.exists(), 'overlay implementation is missing')
         source = path.read_text()
         self.assertIn('Text.PlainText', source)
@@ -59,7 +59,7 @@ class LensTests(unittest.TestCase):
         self.assertIn('WlrLayer.Overlay', source)
 
     def test_exit_uses_qt_api_not_nonexistent_quickshell_quit(self):
-        source = Path(__file__).with_name('shell.qml').read_text()
+        source = (Path(__file__).resolve().parents[1] / 'shell.qml').read_text()
         self.assertNotIn('Quickshell.quit()', source)
         self.assertIn('Qt.quit()', source)
 

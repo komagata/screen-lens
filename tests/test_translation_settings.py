@@ -136,7 +136,7 @@ class TranslationSettingsTests(unittest.TestCase):
         samples = {'ja': '変更を保存する', 'en': 'Save changes', 'zh-CN': '保存更改',
                    'es': 'Guardar los cambios', 'fr': 'Enregistrer les modifications'}
         for code, text in samples.items():
-            response = subprocess.run(['/usr/bin/python', '-B', str(Path(__file__).with_name('pango_patch.py'))],
+            response = subprocess.run(['/usr/bin/python', '-B', str(Path(__file__).resolve().parents[1] / 'src/pango_patch.py')],
                 input=json.dumps(dict(text=text, width=600, height=80, minimum_font_size=18, maximum_font_size=18)),
                 env=os.environ | {'SCREEN_LENS_TARGET': code}, capture_output=True, text=True, timeout=5, check=True)
             result = json.loads(response.stdout)

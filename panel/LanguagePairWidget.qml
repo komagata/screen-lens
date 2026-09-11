@@ -80,7 +80,7 @@ Ui.BarWidget {
       if (popup.visible || popup.backingWindowVisible) return
       stop()
       if (root.alive) Quickshell.execDetached(["/usr/bin/python", "-B",
-        decodeURIComponent(Qt.resolvedUrl("../plugin_launch.py").toString().replace(/^file:\/\//, "")),
+        decodeURIComponent(Qt.resolvedUrl("../src/plugin_launch.py").toString().replace(/^file:\/\//, "")),
         root.pendingTarget, root.pendingSource, "openai"])
     }
   }

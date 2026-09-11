@@ -6,6 +6,14 @@ Screen Lens translates visible text in browsers, terminals, chat apps and other
 applications without modifying them. It uses local OCR and GPT-5.6 Luna with image
 context. An OpenAI API key with API billing is required.
 
+![Screen Lens translating Steam, Discord and Basecamp from English to Japanese](docs/media/demo.gif)
+
+Actual translation results. This edited comparison omits the 20.3-second processing wait.
+
+Choose your source and target languages from the Omarchy panel, then click **Translate screen**.
+
+![Screen Lens panel: choose the source and target languages, then click Translate screen](docs/media/panel.png)
+
 ## Install
 
 Requires Omarchy on x86-64 with Python 3.14. No GPU is required.

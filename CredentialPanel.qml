@@ -66,7 +66,7 @@ Ui.Panel {
     id: store
     property string secret: ""
     command: ["/usr/bin/setsid", "/usr/bin/python", "-I", "-S", "-B",
-              decodeURIComponent(Qt.resolvedUrl("credential_store.py").toString().replace(/^file:\/\//, ""))]
+              decodeURIComponent(Qt.resolvedUrl("src/credential_store.py").toString().replace(/^file:\/\//, ""))]
     clearEnvironment: true
     environment: ({
       "HOME": Quickshell.env("HOME"),

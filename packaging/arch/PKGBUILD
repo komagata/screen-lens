@@ -34,9 +34,15 @@ package() {
   local app="$pkgdir/usr/lib/screen-lens"
   local tree="$srcdir/screen-lens-$_commit"
   install -d "$app/runtime" "$app/models" "$pkgdir/usr/bin"
-  for file in "$tree"/*.py; do
-    [[ ${file##*/} == test_* ]] || install -m644 "$file" "$app/"
-  done
+  if [[ -d "$tree/src" ]]; then
+    install -d "$app/src"
+    install -m644 "$tree/src"/*.py "$app/src/"
+  else
+    # Compatibility with the currently pinned, pre-directory-migration release.
+    for file in "$tree"/*.py; do
+      [[ ${file##*/} == test_* ]] || install -m644 "$file" "$app/"
+    done
+  fi
   install -m644 "$tree"/*.qml "$tree/manifest.json" "$app/"
   cp -r "$tree/panel" "$tree/assets" "$app/"
   bsdtar -xf "$srcdir/ort.whl" -C "$app/runtime"

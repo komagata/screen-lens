@@ -57,12 +57,12 @@ The four-thread CPU-only image-context probe did not finish even one short-label
 request within its 45-second timeout (startup was 2.29 s). CPU-only suitability
 is not established; a compatible GPU is recommended for this experimental model.
 
-Reproduce the inference-only comparison with `benchmark_local_candidates.py`.
+Reproduce the inference-only comparison with `tools/benchmark_local_candidates.py`.
 Reports and screen images remain local and private; do not commit `.size-check`.
 
 ## Split-model experiment: image context once, specialized translation
 
-`benchmark_split_translation.py` replays the same saved OCR report (74 regions).
+`tools/benchmark_split_translation.py` replays the same saved OCR report (74 regions).
 Qwen3.5-4B summarizes visible screen regions once, then unloads; Hy-MT2-1.8B
 translates ten batches of up to eight strings using that background and preserved
 JSON IDs. Both stages use the GPU in the first comparison. No result cache is
@@ -97,7 +97,7 @@ not claim that a global caption is equivalent to direct image context.
 
 ### Short-label transfer gate: not passed
 
-`benchmark_split_labels.py` tests eight authored images, deriving the explanation
+`tools/benchmark_split_labels.py` tests eight authored images, deriving the explanation
 from the image and target location (no gold translation supplied). With the
 official background-only prompt, shop Open became `開店中`, but Save leaked the
 entire explanation and its coordinates into the translation. With a JSON-only
@@ -117,7 +117,7 @@ Do not use another LLM's approval as proof of correctness. Private outputs:
 
 ## Hybrid routing follow-up
 
-`benchmark_hybrid.py` routes English strings of six words or fewer to direct
+`tools/benchmark_hybrid.py` routes English strings of six words or fewer to direct
 image-aware translation and longer strings to Hy-MT2 with exact nearby OCR.
 This is a deliberately simple experimental heuristic, not semantic UI detection
 or a language-independent routing policy. Tests cover routing, batching, source
@@ -263,7 +263,7 @@ samples do not establish general translation quality.
 Obtain the pinned weights above and a trusted llama.cpp server separately, then:
 
 ```sh
-/usr/bin/python -B benchmark_local_translation.py \
+/usr/bin/python -B -m tools.benchmark_local_translation \
   --server /absolute/path/to/llama-server \
   --model /absolute/path/to/Hy-MT2-1.8B-Q4_K_M.gguf \
   --output /absolute/path/to/new-results-directory
