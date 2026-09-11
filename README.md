@@ -14,29 +14,30 @@ Choose your source and target languages from the Omarchy panel, then click **Tra
 
 ![Screen Lens panel: choose the source and target languages, then click Translate screen](docs/media/panel.png)
 
+## Requirements
+
+- Omarchy on x86-64 with Python 3.14. No GPU is required.
+- [screen-lens-bin](https://aur.archlinux.org/packages/screen-lens-bin) from the AUR.
+- An OpenAI API key with API billing and an unlocked desktop keyring.
+
 ## Install
 
-Requires Omarchy on x86-64 with Python 3.14. No GPU is required.
-
-### 1. Install the package
-
-Install [screen-lens-bin from the AUR](https://aur.archlinux.org/packages/screen-lens-bin):
-
 ```sh
-yay -S screen-lens-bin
+yay -S screen-lens-bin # Translation engine and OCR models
+omarchy plugin add https://github.com/komagata/screen-lens.git --enable
 ```
 
-The package includes the application, its Omarchy panel and OCR models. Dependencies
-are installed by the package manager; no virtual environment or manual model
-download is needed. The package uses a prebuilt CPU ONNX Runtime, hence the
-`-bin` name. You do not need to run `omarchy plugin add` separately.
+Install the engine first: `omarchy plugin add` does not install system or AUR
+packages. The package manager installs the engine's dependencies; no virtual
+environment or manual model download is needed. The plugin adds the translation
+panel to your bar and uses `/usr/bin/screen-lens` to run the engine.
 
-### 2. Enable the panel
+The engine occupies approximately 90 MB, excluding shared dependencies,
+package-manager caches and translation results. Additional dependency storage
+depends on what your machine already has installed. The package uses a prebuilt
+CPU ONNX Runtime, hence the `-bin` name.
 
-Open **Screen Lens** from the Omarchy application menu once. This enables the
-translation icon in your bar. Do this for each user who wants to use the panel.
-
-### 3. Set your API key
+### Set your API key
 
 Click the translation icon, open **API key settings**, enter your OpenAI API key,
 and click **Save**. You can then choose your languages and click **Translate screen**.
@@ -44,21 +45,22 @@ The key is stored in your desktop keyring and reused on subsequent launches.
 A persistent Secret Service provider, such as GNOME Keyring, must be available
 and unlocked. A ChatGPT subscription does not replace API billing.
 
-### Migrating from a manual installation
+### Existing installations
 
-If you previously installed the plugin from Git, remove that panel before step 2:
+If you already added the plugin from Git, install or update `screen-lens-bin`
+and use `omarchy plugin update komagata.screen-lens` instead of adding it again.
+
+If you previously enabled the package-provided panel from the application menu,
+replace its link with the Git-managed plugin:
 
 ```sh
 omarchy plugin remove komagata.screen-lens
+omarchy plugin add https://github.com/komagata/screen-lens.git --enable
 ```
 
-Then open **Screen Lens** from the application menu again. Existing API keys are
-retained. Existing manual runtime directories and launchers are not deleted;
-update any custom shortcut that still points to an old checkout.
-
-The application occupies approximately 90 MB, excluding shared dependencies,
-package-manager caches and translation results. Additional dependency storage
-depends on what your machine already has installed.
+Existing API keys are retained. Older manual runtime directories and launchers
+are not deleted; update any custom shortcut that still points to an old checkout
+to use `/usr/bin/screen-lens`.
 
 ## Use
 
@@ -135,21 +137,27 @@ and runtime code are also part of the cache key.
   minor version requires an updated package.
 
 If a snapshot gets stuck, press Esc or run the same translation command again.
-For an error opening API key settings, enable the panel from the application menu
+For an error opening API key settings, run `omarchy plugin enable komagata.screen-lens`
 and check that your desktop keyring is unlocked.
 
 ## Update and remove
 
-Update through your usual AUR helper. To remove the panel, then the package:
+Update the engine through your usual AUR helper, and update the panel separately:
+
+```sh
+omarchy plugin update komagata.screen-lens
+```
+
+To remove the panel, then the engine:
 
 ```sh
 omarchy plugin remove komagata.screen-lens
 sudo pacman -R screen-lens-bin
 ```
 
-The panel is a user-owned link to the package in `/usr/lib/screen-lens`.
-Package removal does not change other users' settings. Each user who enabled
-the panel should remove their link. Keyring entries, custom shortcuts, manually
+The panel is a Git checkout under `~/.config/omarchy/plugins/komagata.screen-lens`;
+the engine is installed system-wide. Each user should remove their own panel.
+Removing the engine affects all users. Keyring entries, custom shortcuts, manually
 installed older runtimes and cached snapshots are retained. Remove saved keys
 separately with your desktop keyring manager.
 
