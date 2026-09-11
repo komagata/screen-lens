@@ -1,5 +1,8 @@
 # Screen Lens
 
+Licensed under the [MIT License](LICENSE). Third-party assets and dependencies
+retain their own licenses and notices.
+
 **Translate a snapshot of your Omarchy desktop into your language.**
 
 Screen Lens is an experimental, one-shot screen translator for Omarchy / Hyprland.
