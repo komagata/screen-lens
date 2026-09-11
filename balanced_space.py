@@ -19,6 +19,10 @@ def budgets(image,base,obstacles=()):
             end=int(other['y']+other['height']);start=int(other['y'])
             if end<=y:lower=max(lower,(end+y+1)//2+1)
             elif start>=y+h:upper=min(upper,(start+y+h)//2-1)
+            # OCR padding crossing one edge only blocks that direction, not
+            # the empty space on the opposite side of this text rectangle.
+            elif start<y and end<y+h:lower=y
+            elif start>y and end>y+h:upper=y+h
             else:lower=y;upper=y+h
         top=y;bottom=y+h
         # Near-white/translucent surfaces can vary by a few 8-bit levels even

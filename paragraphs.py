@@ -19,7 +19,8 @@ def paragraphs(rows,separators=(),image=None,allow_indent=False):
         # Preserve author headers, but keep mentions inside prose with the
         # sentence they belong to (otherwise a wrapped tail is mistranslated).
         handle_header=re.search(r'@[A-Za-z0-9_]+\s*(?:[·•].*)?$',text)
-        above_handle=any(re.match(r'^@[A-Za-z0-9_]+',r['text'].strip())
+        # A quote beginning with a mention is prose, not an author handle.
+        above_handle=any(re.fullmatch(r'@[A-Za-z0-9_]+\s*(?:[·•]\s*\S+)?',r['text'].strip())
             and abs(r['x']-row['x'])<=row['height']*.5
             and row['height']*.5<=r['y']-row['y']<=row['height']*1.6 for r in rows)
         # OCR can split a name and timestamped handle into overlapping boxes.
@@ -52,7 +53,10 @@ def paragraphs(rows,separators=(),image=None,allow_indent=False):
               and not re.search(r'\d{1,2}:\d{2}\s*(?:[ap]m)?\s*$',previous['text'],re.I)
               and not re.search(r'(?:\.{2,}|…)\s*$',previous['text'])
               and .65<=h/max(1,previous['height'])<=1.5
-              and -.25*h<=row['y']-previous['y']-previous['height']<=.45*h)
+              # Detection padding can overlap by roughly a third of a line.
+              # Keep that wrapped tail with its paragraph, so its top border
+              # is not mistaken for the preceding line's foreground ink.
+              and -.35*min(h,previous['height'])<=row['y']-previous['y']-previous['height']<=.45*h)
         if join and separators:
             from layout_lines import separates
             join=not separates(previous,row,separators)
