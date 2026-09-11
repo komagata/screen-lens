@@ -6,11 +6,13 @@ import sys
 from translation_settings import validate_target
 
 
-def command(target, home=None, source='en', engine=None):
+def command(target, home=None, source='en', engine=None, system_launcher=Path('/usr/bin/screen-lens')):
     validate_target(target)
     validate_target(source)
     if engine is not None and engine not in ('openai', 'local'): raise ValueError('Unsupported engine')
     launcher = (home or Path.home()) / '.local/bin/screen-lens'
+    if system_launcher.is_file() and os.access(system_launcher, os.X_OK):
+        launcher = system_launcher
     if not launcher.is_file() or not os.access(launcher, os.X_OK):
         raise FileNotFoundError('Screen Lens runtime is not installed')
     return [str(launcher), '--lt', '--lt-fast', '--source', source, '--target', target] + (

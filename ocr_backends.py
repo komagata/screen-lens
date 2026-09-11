@@ -12,6 +12,21 @@ ROOT = Path(__file__).resolve().parent
 DEFAULT_UI_PROFILE = 'v5-v6'
 
 
+def packaged_models(root):
+    if not (root / 'system-package').is_file():
+        return {}
+    names = {'Det.model_path': 'ch_PP-OCRv5_det_mobile.onnx',
+             'Rec.model_path': 'PP-OCRv6_rec_small.onnx',
+             'Cls.model_path': 'ch_ppocr_mobile_v2.0_cls_mobile.onnx'}
+    result = {}
+    for key, name in names.items():
+        path = root / 'models' / name
+        if not path.is_file():
+            raise FileNotFoundError('Packaged OCR model missing; reinstall Screen Lens')
+        result[key] = str(path)
+    return result
+
+
 def rapid_lines(boxes, texts, scores):
     if boxes is None or texts is None or scores is None:
         return []
@@ -69,6 +84,9 @@ def make_rapid(profile=None, intra_threads=4, detector_limit='min', *, cuda=Fals
         'EngineConfig.onnxruntime.intra_op_num_threads': intra_threads,
         'EngineConfig.onnxruntime.inter_op_num_threads': 1,
     }
+    if (ROOT / 'system-package').is_file() and profile != 'v5-v6':
+        raise ValueError('The system package supports only the v5-v6 OCR profile')
+    params.update(packaged_models(ROOT))
     if cuda:
         params.update({
             'EngineConfig.onnxruntime.use_cuda': True,

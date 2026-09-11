@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Screen Lens
+Comment=Enable the screen translation panel
+Exec=/usr/bin/screen-lens --setup-panel
+Icon=screen-lens
+Terminal=true
+Categories=Utility;Accessibility;
