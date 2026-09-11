@@ -8,7 +8,11 @@ context. An OpenAI API key with API billing is required.
 
 ## Install
 
-On Omarchy with x86-64 and Python 3.14:
+Requires Omarchy on x86-64 with Python 3.14. No GPU is required.
+
+### 1. Install the package
+
+Install [screen-lens-bin from the AUR](https://aur.archlinux.org/packages/screen-lens-bin):
 
 ```sh
 yay -S screen-lens-bin
@@ -17,15 +21,24 @@ yay -S screen-lens-bin
 The package includes the application, its Omarchy panel and OCR models. Dependencies
 are installed by the package manager; no virtual environment or manual model
 download is needed. The package uses a prebuilt CPU ONNX Runtime, hence the
-`-bin` name. No GPU is required.
+`-bin` name. You do not need to run `omarchy plugin add` separately.
 
-Open **Screen Lens** from the application menu once to enable its bar panel.
-Then open the translation icon and set your key under **API key settings**.
+### 2. Enable the panel
+
+Open **Screen Lens** from the Omarchy application menu once. This enables the
+translation icon in your bar. Do this for each user who wants to use the panel.
+
+### 3. Set your API key
+
+Click the translation icon, open **API key settings**, enter your OpenAI API key,
+and click **Save**. You can then choose your languages and click **Translate screen**.
 The key is stored in your desktop keyring and reused on subsequent launches.
 A persistent Secret Service provider, such as GNOME Keyring, must be available
 and unlocked. A ChatGPT subscription does not replace API billing.
 
-If you previously installed the plugin from Git, remove that panel first:
+### Migrating from a manual installation
+
+If you previously installed the plugin from Git, remove that panel before step 2:
 
 ```sh
 omarchy plugin remove komagata.screen-lens
