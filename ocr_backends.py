@@ -43,7 +43,9 @@ def prepare_cuda():
         sys.path.remove(str(packages))
 
 
-def make_rapid(profile='v5', intra_threads=4, detector_limit='min', *, cuda=False):
+def make_rapid(profile=None, intra_threads=4, detector_limit='min', *, cuda=False):
+    from runtime_loader import ocr_profile
+    profile = ocr_profile(ROOT, profile)
     if profile not in ('v5','v5-v6','v6'):
         raise ValueError('Unknown OCR profile')
     if type(intra_threads) is not int or not 1<=intra_threads<=64:
@@ -140,12 +142,8 @@ def verify_with_luna(image_path, lines):
     from PIL import Image
     if not lines:
         return {}
-    key = os.environ.get('OPENAI_API_KEY')
-    if not key:
-        key = subprocess.run(['gopass', 'show', '-o', 'personal/openai/api-key'], capture_output=True,
-                             text=True, check=True, timeout=15).stdout.strip()
-    if not key:
-        raise RuntimeError('Missing API key')
+    from api_credentials import credentials
+    key = credentials()
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
     result = {}
     with Image.open(image_path) as image:

@@ -2,11 +2,39 @@ import tempfile
 import os
 import time
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 from PIL import Image
 
 
 class SnapshotCacheTests(unittest.TestCase):
+    def test_native_runtime_manifest_change_invalidates_cache(self):
+        import snapshot_cache
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / 'screen.png'
+            Image.new('RGB', (8, 8)).save(source)
+            manifest = root / 'runtime-manifest.json'
+            manifest.write_text('{"build": "one"}')
+            with patch.object(snapshot_cache, 'ROOT', root):
+                old = snapshot_cache.fingerprint(source, False)
+                manifest.write_text('{"build": "two"}')
+                self.assertNotEqual(old, snapshot_cache.fingerprint(source, False))
+
+    def test_slim_dependency_change_invalidates_cache(self):
+        import snapshot_cache
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / 'screen.png'
+            Image.new('RGB', (8, 8)).save(source)
+            (root / 'requirements-ocr.txt').write_text('original')
+            slim = root / 'requirements-slim.txt'
+            slim.write_text('headless-version-1')
+            with patch.object(snapshot_cache, 'ROOT', root):
+                old = snapshot_cache.fingerprint(source, False)
+                slim.write_text('headless-version-2')
+                self.assertNotEqual(old, snapshot_cache.fingerprint(source, False))
+
     def test_exact_hit_and_setting_and_pixel_misses(self):
         import snapshot_cache
         with tempfile.TemporaryDirectory() as tmp:

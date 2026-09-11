@@ -1,5 +1,12 @@
 """Experimental wrapped-prose grouping, not a general social-feed parser."""
 import re
+from translation_settings import source_candidate
+
+# These complete UI actions use an ellipsis to indicate a following dialog,
+# not missing prose. Keep arbitrary clipped titles/sentences protected.
+DIALOG_ACTION = re.compile(
+    r'(?:open|open file|open folder|save|save as|export|import|print|find|replace|browse)'
+    r'\s*(?:\.{3}|…)\s*', re.I)
 
 
 def paragraphs(rows,separators=(),image=None,allow_indent=False):
@@ -24,8 +31,8 @@ def paragraphs(rows,separators=(),image=None,allow_indent=False):
             for r in rows)
         if (row.get('ocr_preserve',False) or row.get('ocr_uncertain',False)
                 or (row.get('confidence',1)<.9 and not row.get('ocr_corroborated',False)
-                    and row.get('ocr_reading')!='vision') or not re.search('[A-Za-z]{2}',text)
-                or re.search(r'[\u3040-\u30ff\u3400-\u9fff]',text) or above_handle or beside_handle
+                    and row.get('ocr_reading')!='vision') or not source_candidate(text)
+                or above_handle or beside_handle
                 or handle_header or re.fullmatch(r'https?://\S+',text)):
             history.append((row,None))
             continue
@@ -68,5 +75,6 @@ def paragraphs(rows,separators=(),image=None,allow_indent=False):
     # until a translation path can reliably preserve the missing continuation.
     # Only a trailing ellipsis is held back: internal pauses/omissions do not
     # imply that the end of the visible sentence is missing. This still cannot
-    # distinguish a clipped title from a complete menu label such as Open….
-    return [g for g in groups if not re.search(r'(?:\.{2,}|…)\s*$',g['text'])]
+    # infer arbitrary clipped titles; only known complete dialog actions pass.
+    return [g for g in groups if not re.search(r'(?:\.{2,}|…)\s*$',g['text'])
+            or DIALOG_ACTION.fullmatch(g['text'])]

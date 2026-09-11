@@ -31,11 +31,13 @@ def render_patch(text,width,height,foreground=(15,20,25),minimum_font_size=None,
     surface=cairo.ImageSurface(cairo.FORMAT_ARGB32,width,height)
     context=cairo.Context(surface)
     layout=PangoCairo.create_layout(context)
-    layout.get_context().set_language(Pango.Language.from_string('ja'))
+    from translation_settings import target, font as target_font
+    language = target()
+    layout.get_context().set_language(Pango.Language.from_string(language))
     layout.set_text(text,-1)
     layout.set_width(width*Pango.SCALE)
     layout.set_wrap(Pango.WrapMode.WORD_CHAR)
-    font=Pango.FontDescription('Noto Sans CJK JP')
+    font=Pango.FontDescription(target_font(language))
     minimum=round((minimum_font_size if minimum_font_size is not None else (7 if height/pixel_scale<=16 else 12))*pixel_scale)
     for size in range(min(round((maximum_font_size if maximum_font_size is not None else 24)*pixel_scale),height),minimum-1,-1):
         font.set_absolute_size(size*Pango.SCALE)

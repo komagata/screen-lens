@@ -16,9 +16,20 @@ MAX_ENTRIES = 8
 
 
 def fingerprints(source, fast):
+    from translation_settings import target, source as source_language
     settings = hashlib.sha256(b'screen-lens-exact-v2')
     settings.update(str(bool(fast)).encode())
-    for path in sorted(p for p in ROOT.glob('*.py') if not p.name.startswith('test_')) + [ROOT / 'requirements-ocr.txt']:
+    settings.update(target().encode())
+    settings.update(b'|source:' + source_language().encode())
+    provider = os.environ.get('SCREEN_LENS_PROVIDER', 'openai')
+    settings.update(b'|provider:' + provider.encode())
+    if provider == 'local':
+        from local_translation import configuration
+        settings.update(json.dumps(configuration(), sort_keys=True).encode())
+    sources = sorted(p for p in ROOT.glob('*.py') if not p.name.startswith('test_'))
+    sources += sorted(ROOT.glob('requirements*.txt'))
+    sources += list(ROOT.glob('runtime-manifest.json'))
+    for path in sources:
         settings.update(path.name.encode())
         settings.update(path.read_bytes())
     with Image.open(source) as image:

@@ -45,11 +45,15 @@ def translate_regions(case,mode,key):
 
 
 def recognition_candidates(rows,corroborate=False,readable=False):
+    from translation_settings import source, source_candidate
     selected=[]
     for row in rows:
         if row.get('ocr_preserve'):continue
         text=row['text']
         if not (corroborate or readable or row.get('confidence',1)>=.9):continue
+        if source() != 'en':
+            if source_candidate(text): selected.append(row)
+            continue
         if not re.search('[A-Za-z]{2}',text):continue
         # In readable mode a single Han glyph may be a misread icon. This is
         # only a rereading candidate, never a declaration that it is English.
@@ -122,6 +126,7 @@ def main(argv=None):
     parser.add_argument('image',type=Path)
     parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--cloud',action='store_true')
+    parser.add_argument('--local',action='store_true',help='Experimental local image-context translation; no cloud fallback')
     parser.add_argument('--renderer',choices=['pil','pango'],default='pil',help='Pango requires system Python with gi/cairo and fonts')
     parser.add_argument('--recover-display-regions',action='store_true',help='Experimental local inset/background recovery; requires --renderer pango')
     parser.add_argument('--expand-display-space',action='store_true',help='Experimental exact-background right/down space allocation; never changes OCR input')
@@ -154,7 +159,9 @@ def main(argv=None):
                         help='Opt-in two parallel translation requests; duplicates image context input')
     parser.add_argument('--mode',choices=['text','nearby','image','combined','crop','crop_full'],default='crop_full')
     args=parser.parse_args(argv)
-    if args.translation_batches==2 and (not args.cloud or args.per_target):
+    if args.local and args.cloud:
+        parser.error('Choose local or cloud, never both')
+    if args.translation_batches==2 and (not (args.cloud or args.local) or args.per_target):
         parser.error('--translation-batches 2 requires --cloud and excludes --per-target')
     if args.recover_display_regions:
         if args.renderer!='pango':
@@ -353,7 +360,7 @@ def main(argv=None):
                 trim_word_margins=args.trim_word_margins,word_margin_audit=word_margin_audit)
     report_path=args.output/'report.json'
     report_path.write_text(json.dumps(report,ensure_ascii=False,indent=2))
-    if args.cloud and case['groups']:
+    if (args.cloud or args.local) and case['groups']:
         from stage_translation import credentials,request_translation
         from snapshot import render
         before=time.monotonic()
@@ -361,7 +368,11 @@ def main(argv=None):
         if args.translation_batches==2:
             from stage_translation import request_translation_parallel
             translate=request_translation_parallel
-        translations,usage=translate(case,args.mode,credentials())
+        if args.local:
+            from local_translation import translate as translate_local
+            translations,usage=translate_local(case)
+        else:
+            translations,usage=translate(case,args.mode,credentials())
         translation_seconds=time.monotonic()-before
         if args.balanced_display_space:
             from balanced_space import fit_translations
@@ -393,7 +404,7 @@ def main(argv=None):
             else:
                 result,rendered=render(image,display_groups,translations,renderer=args.renderer,**font_options)
         result.save(args.output/'translated.png')
-        report.update(cloud=True,translations=translations,rendered=rendered,usage=usage,
+        report.update(cloud=bool(args.cloud),provider='local' if args.local else 'openai',translations=translations,rendered=rendered,usage=usage,
                       translation_seconds=translation_seconds,total_seconds=time.monotonic()-started)
         report_path.write_text(json.dumps(report,ensure_ascii=False,indent=2))
     print(json.dumps(dict(targets=len(case['groups']),cloud=report['cloud'],

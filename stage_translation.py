@@ -16,6 +16,9 @@ from stage_eval import score_translations
 
 
 def payload(case,mode):
+    from translation_settings import LANGUAGES, target, source
+    language = LANGUAGES[target()]
+    original_language = LANGUAGES[source()]
     if mode not in ('text','nearby','image','combined','crop','crop_full'):
         raise ValueError('Unknown context mode')
     fields=('id','text','x','y','width','height')
@@ -38,8 +41,10 @@ def payload(case,mode):
             raise ValueError('Unsupported service tier')
         result['service_tier']=case['service_tier']
     result['instructions']=(
-        'Translate the exact supplied target text into natural Japanese. '
-        'Translate ordinary English UI labels, headings and sentence fragments too; do not leave them in English. '
+        f'Translate the exact supplied {original_language} target text into natural {language}. '
+        'Leave text already in the target language unchanged. '
+        f'Translate ordinary {original_language} UI labels, headings and sentence fragments too. '
+        'Leave text in languages other than the selected source language unchanged. '
         'Leave source text unchanged only when it needs no translation, such as a proper name, code identifier or URL. '
         'Use reference text or images, when supplied, only to disambiguate meaning. '
         'Parent reference text provides the original unsplit context; translate only the target fragment, not its parent. '
@@ -77,7 +82,7 @@ def payload(case,mode):
     content.insert(0,dict(type='input_text',text=json.dumps(data,ensure_ascii=False)))
     if case.get('concise'):
         result['instructions']+=(
-            ' Prefer concise, idiomatic Japanese suitable for a compact screen. '
+            f' Prefer concise, idiomatic {language} suitable for a compact screen. '
             'Avoid redundant wording and unnecessary politeness, but do not summarize. '
             'Preserve every condition, exception, contrast, entity and action in the original. '
             'When brevity and fidelity conflict, choose fidelity even if the result will not fit. '
@@ -95,8 +100,8 @@ def payload(case,mode):
 
 
 def credentials():
-    return os.environ.get('OPENAI_API_KEY') or subprocess.run(
-        ['gopass','show','-o','personal/openai/api-key'],capture_output=True,text=True,check=True,timeout=15).stdout.strip()
+    from api_credentials import credentials as read_credentials
+    return read_credentials()
 
 
 def request_translation(case,mode,key):

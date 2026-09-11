@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "komagata.screen-lens",
+  "name": "Screen Lens",
+  "version": "0.1.0",
+  "author": "komagata",
+  "description": "Screen translation with language selection and native API key setup.",
+  "kinds": ["bar-widget", "panel"],
+  "keepLoaded": true,
+  "entryPoints": {"barWidget": "panel/LanguagePairWidget.qml", "panel": "CredentialPanel.qml"},
+  "barWidget": {
+    "displayName": "Screen Lens", "category": "Utilities", "allowMultiple": false,
+    "defaultSection": "right", "defaults": {}
+  }
+}

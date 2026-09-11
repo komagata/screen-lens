@@ -17,8 +17,13 @@ def source_ink_height(image, row):
     active=np.flatnonzero(ink.sum(axis=1)>=max(1,round(w*.005)))
     if len(active)<2 or ink.mean()>.6:
         return float(h)
-    measured=int(active[-1]-active[0]+1)
-    return float(measured) if measured>=h*.25 else float(h)
+    # An OCR rectangle may contain several baselines or a separate underline.
+    # Measure horizontal ink bands rather than their combined bounding box.
+    # Join tiny gaps inside glyphs (e.g. dots); discard isolated thin rules.
+    bands=np.split(active,np.flatnonzero(np.diff(active)>3)+1)
+    heights=[int(band[-1]-band[0]+1) for band in bands]
+    substantial=[height for height in heights if height>=max(3,max(heights)*.35)]
+    return float(statistics.median(substantial)) if substantial else float(h)
 
 
 def match_source_fonts(groups, rows, image=None):
@@ -31,6 +36,6 @@ def match_source_fonts(groups, rows, image=None):
         # Use line heights, never the height of a multi-line paragraph or an
         # expanded display box. OCR coordinates are already in processing pixels.
         target = max(7, min(128, round(statistics.median(heights) if heights else group['height'])))
-        result.append(dict(group, source_ink_height=target, minimum_font_size=max(7, round(target * .75)),
+        result.append(dict(group, source_ink_height=target, minimum_font_size=max(7, round(target * .9)),
                            maximum_font_size=target))
     return result

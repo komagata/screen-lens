@@ -1,4 +1,6 @@
 .venv/
+.venv-*/
+.size-check/
 __pycache__/
 *.pyc
 .env

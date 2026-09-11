@@ -31,6 +31,7 @@ def render(image,rows,translations,renderer='pil',minimum_font_size=None,maximum
     original=image.convert('RGB')
     result=original.copy()
     report=[];pending=[]
+    fallback_sizes={}
     for row in rows:
         value=translations[row['id']]
         if value==row['text']:
@@ -74,6 +75,8 @@ def render(image,rows,translations,renderer='pil',minimum_font_size=None,maximum
                          foreground=[15,20,25] if sum(bg)>384 else [231,233,234])
             if row_minimum is not None:request['minimum_font_size']=row_minimum
             if row_maximum is not None:request['maximum_font_size']=row_maximum
+            if row.get('source_ink_height') and row_minimum is not None:
+                fallback_sizes[row['id']]=min(row_minimum,max(12,round(row['source_ink_height']*.7)))
             pending.append((entry,x,y,w,h,bg,request))
             continue
         fitted=None
@@ -122,6 +125,19 @@ def render(image,rows,translations,renderer='pil',minimum_font_size=None,maximum
     else:
         rendered_batches=[render_batch(batch) for batch in batches]
     for batch,rendered_batch in zip(batches,rendered_batches):
+        # Try normal source-matched sizing first. Only failed fits may shrink,
+        # in the exact same box; no extra translation request or UI overlap.
+        retries=[];retry_indices=[]
+        for index,(item,rendered) in enumerate(zip(batch,rendered_batch)):
+            floor=fallback_sizes.get(item[0]['id'])
+            if rendered.get('reason')=='does not fit' and floor is not None and floor<item[-1]['minimum_font_size']:
+                retries.append((*item[:-1],dict(item[-1],minimum_font_size=floor)))
+                retry_indices.append(index)
+        if retries:
+            for index,retried in zip(retry_indices,render_batch(retries)):
+                if retried.get('shown'):
+                    retried['fit_fallback']=True
+                    rendered_batch[index]=retried
         for (entry,x,y,w,h,bg,_),rendered in zip(batch,rendered_batch):
             png=rendered.pop('png',None)
             entry.update(rendered,renderer='pango',background=list(bg))

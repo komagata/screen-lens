@@ -11,7 +11,37 @@ class SourceFontTests(unittest.TestCase):
         group=dict(id=1,height=180,members=[1,2])
         matched=match_source_fonts([group],rows)[0]
         self.assertEqual(matched['maximum_font_size'],33)
-        self.assertEqual(matched['minimum_font_size'],25)
+        self.assertEqual(matched['minimum_font_size'],30)
+
+    def test_multiline_ocr_box_does_not_make_translation_paragraph_sized(self):
+        from PIL import ImageDraw, ImageFont
+        from snapshot import FONT
+        image=Image.new('RGB',(500,160),'white')
+        draw=ImageDraw.Draw(image);font=ImageFont.truetype(FONT,24)
+        for y in (20,60,100):
+            draw.text((20,y),'Display settings',font=font,fill='black',anchor='lt')
+        row=dict(id=1,x=15,y=15,width=350,height=120,text='Display settings '*3)
+        one=dict(row,height=35)
+        expected=match_source_fonts([one],[one],image)[0]['maximum_font_size']
+        actual=match_source_fonts([row],[row],image)[0]['maximum_font_size']
+        self.assertLessEqual(abs(actual-expected),2)
+
+    def test_separate_underline_does_not_inflate_source_size(self):
+        from PIL import ImageDraw, ImageFont
+        from snapshot import FONT
+        image=Image.new('RGB',(500,100),'white')
+        draw=ImageDraw.Draw(image);font=ImageFont.truetype(FONT,24)
+        draw.text((20,20),'Display settings',font=font,fill='black',anchor='lt')
+        row=dict(id=1,x=15,y=15,width=350,height=70,text='Display settings')
+        expected=match_source_fonts([row],[row],image)[0]['maximum_font_size']
+        draw.line((20,65,330,65),fill='black',width=1)
+        actual=match_source_fonts([row],[row],image)[0]['maximum_font_size']
+        self.assertLessEqual(abs(actual-expected),2)
+
+    def test_source_sized_text_never_shrinks_by_a_quarter(self):
+        row=dict(id=1,x=10,y=10,width=400,height=40,text='Heading')
+        matched=match_source_fonts([row],[row])[0]
+        self.assertGreaterEqual(matched['minimum_font_size'],36)
 
     def test_large_translation_exceeds_old_cap_in_both_renderers(self):
         row=dict(id=1,x=10,y=10,width=400,height=40,text='Large heading')
