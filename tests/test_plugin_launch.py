@@ -5,6 +5,23 @@ import unittest
 
 
 class PluginLaunchTests(unittest.TestCase):
+    def test_read_only_runtime_check(self):
+        module = self.module()
+        self.assertTrue(hasattr(module, 'runtime_available'), 'Read-only runtime check missing')
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            launcher = home / 'system-launcher'
+            self.assertFalse(module.runtime_available(home, launcher))
+            launcher.write_text('#!/bin/sh\nexit 99\n')
+            self.assertFalse(module.runtime_available(home, launcher))
+            launcher.chmod(0o700)
+            self.assertTrue(module.runtime_available(home, launcher))
+            launcher.unlink()
+            legacy = home / '.local/bin/screen-lens'
+            legacy.parent.mkdir(parents=True)
+            legacy.touch(); legacy.chmod(0o700)
+            self.assertTrue(module.runtime_available(home, launcher))
+
     def module(self):
         self.assertIsNotNone(importlib.util.find_spec('plugin_launch'), 'Plugin launcher is not implemented')
         import plugin_launch

@@ -7,16 +7,27 @@ ShellRoot {
   property int calls: 0
   property string selected: ""
   property string selectedSource: ""
+  property int checks: 0
+  function itemNamed(item, name) {
+    if (item.objectName === name) return item
+    for (var i = 0; i < item.children.length; i++) {
+      var result = itemNamed(item.children[i], name)
+      if (result) return result
+    }
+    return null
+  }
   FloatingWindow {
     visible: true
     implicitWidth: 420
-    implicitHeight: 430
+    implicitHeight: form.implicitHeight + 40
     color: "#151515"
+    TextEdit { id: clipboardProbe; visible: false; textFormat: TextEdit.PlainText }
     LanguagePairForm {
       id: form
       anchors.fill: parent
       anchors.margins: 20
       onTranslateRequested: function(code, sourceCode) { root.calls++; root.selected = code; root.selectedSource = sourceCode }
+      onCheckRequested: root.checks++
     }
   }
   Timer {
@@ -32,6 +43,23 @@ ShellRoot {
         form.targetSelector.changed("fr")
         if (form.source !== "ja" || form.target !== "fr") throw Error("dropdown selection")
         form.target = "fr"; form.source = "ja"
+        if (form.engineState !== "checking") throw Error("must check before translating")
+        if (root.itemNamed(form, "checkEngineAgain").enabled) throw Error("duplicate check")
+        form.submit()
+        if (root.calls !== 0) throw Error("translated before check")
+        form.engineState = "missing"
+        form.submit()
+        if (root.calls !== 0) throw Error("translated without engine")
+        if (form.installCommand !== "yay -S screen-lens-bin") throw Error("install command")
+        if (!root.itemNamed(form, "setupRequired").visible || root.itemNamed(form, "translateButton").visible) throw Error("setup visibility")
+        root.itemNamed(form, "copyInstallCommand").clicked()
+        if (!form.commandCopied) throw Error("copy feedback")
+        clipboardProbe.paste()
+        if (clipboardProbe.text !== form.installCommand) throw Error("clipboard content")
+        root.itemNamed(form, "checkEngineAgain").clicked()
+        if (root.checks !== 1) throw Error("retry signal")
+        form.engineState = "ready"
+        if (root.itemNamed(form, "setupRequired").visible || !root.itemNamed(form, "apiKeySettings").visible) throw Error("ready visibility")
         form.submit()
         if (root.calls !== 1 || root.selected !== "fr" || root.selectedSource !== "ja") throw Error("selection")
         form.busy = true; form.submit()
@@ -44,6 +72,11 @@ ShellRoot {
         if (root.calls !== 1) throw Error("same languages")
         form.source = "en"
         var path = Quickshell.env("SCREEN_LENS_TRANSLATION_IMAGE")
+        if (Quickshell.env("SCREEN_LENS_SETUP_IMAGE")) {
+          path = Quickshell.env("SCREEN_LENS_SETUP_IMAGE")
+          form.engineState = "missing"
+          form.commandCopied = false
+        }
         if (path) form.grabToImage(function(result) {
           result.saveToFile(path); console.log("SCREEN_LENS_TRANSLATION_PASS"); Qt.quit()
         })

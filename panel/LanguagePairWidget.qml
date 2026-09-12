@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import qs.Ui as Ui
 import qs.Commons
 
@@ -25,6 +26,13 @@ Ui.BarWidget {
     var sourceCode = setting("sourceLanguage", "en")
     form.source = validTarget(sourceCode) ? sourceCode : "en"
     opened = true
+    form.commandCopied = false
+    checkEngine()
+  }
+  function checkEngine() {
+    if (engineCheck.running) return
+    form.engineState = "checking"
+    engineCheck.running = true
   }
   function close() { form.resetSelectors(); opened = false }
   function closeForPopoutSwitch() { close() }
@@ -45,7 +53,7 @@ Ui.BarWidget {
   }
   function startTranslation(code, sourceCode) {
     sourceCode = sourceCode || form.source
-    if (!validTarget(code) || !validTarget(sourceCode) || code === sourceCode || launchTimer.running) return
+    if (form.engineState !== "ready" || !validTarget(code) || !validTarget(sourceCode) || code === sourceCode || launchTimer.running) return
     pendingTarget = code
     pendingSource = sourceCode
     selectTarget(code)
@@ -59,7 +67,23 @@ Ui.BarWidget {
     close()
     credentialsTimer.restart()
   }
-  Component.onDestruction: { alive = false; launchTimer.stop(); credentialsTimer.stop() }
+  Component.onDestruction: { alive = false; launchTimer.stop(); credentialsTimer.stop(); engineCheck.running = false }
+
+  Process {
+    id: engineCheck
+    command: ["/usr/bin/python", "-B",
+      decodeURIComponent(Qt.resolvedUrl("../src/plugin_launch.py").toString().replace(/^file:\/\//, "")), "--check"]
+    onStarted: checkDeadline.restart()
+    onExited: function(code, status) {
+      checkDeadline.stop()
+      if (root.alive) form.engineState = code === 0 && status === 0 ? "ready" : "missing"
+    }
+  }
+  Timer {
+    id: checkDeadline
+    interval: 3000
+    onTriggered: { engineCheck.running = false; if (root.alive) form.engineState = "missing" }
+  }
 
   Timer {
     id: credentialsTimer
@@ -111,6 +135,7 @@ Ui.BarWidget {
       onTranslateRequested: function(code, sourceCode) { root.startTranslation(code, sourceCode) }
       onCancelled: root.close()
       onCredentialsRequested: root.openCredentials()
+      onCheckRequested: root.checkEngine()
     }
   }
 }

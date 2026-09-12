@@ -32,6 +32,13 @@ packages. The package manager installs the engine's dependencies; no virtual
 environment or manual model download is needed. The plugin adds the translation
 panel to your bar and uses `/usr/bin/screen-lens` to run the engine.
 
+If you add the plugin before installing the engine, the panel shows **Setup
+required** with the installation command, **Copy command**, **Installation
+guide** and **Check again**. Install the engine in a terminal, then click
+**Check again** to return to language selection and API key settings. This checks
+for the launcher, not the health of all runtime dependencies. The panel never
+installs packages automatically.
+
 The engine occupies approximately 90 MB, excluding shared dependencies,
 package-manager caches and translation results. Additional dependency storage
 depends on what your machine already has installed. The package uses a prebuilt

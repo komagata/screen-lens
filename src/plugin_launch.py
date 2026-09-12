@@ -19,7 +19,18 @@ def command(target, home=None, source='en', engine=None, system_launcher=Path('/
         ['--provider', engine] if engine is not None else [])
 
 
+def runtime_available(home=None, system_launcher=Path('/usr/bin/screen-lens')):
+    """Check the same executable paths as launch, without starting the engine."""
+    try:
+        command('ja', home, system_launcher=system_launcher)
+        return True
+    except OSError:
+        return False
+
+
 def main():
+    if sys.argv[1:] == ['--check']:
+        return 0 if runtime_available() else 1
     try:
         if len(sys.argv) not in (2, 3, 4): raise ValueError('Expected target, optional source and engine')
         argv = command(sys.argv[1], source=sys.argv[2] if len(sys.argv) >= 3 else 'en',

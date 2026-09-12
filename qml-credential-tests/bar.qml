@@ -57,7 +57,10 @@ ShellRoot {
           escapeKey.running = true
           test.phase = 1
         } else if (test.phase === 1 && !widget.opened) {
-          widget.open(); widget.startTranslation("ja")
+          widget.open()
+          test.phase = 11
+        } else if (test.phase === 11 && test.ticks > 10) {
+          widget.startTranslation("ja")
           if (widget.opened) throw Error("must hide before launch")
           test.phase = 2
         } else if (test.phase === 2 && test.ticks > 15) {
